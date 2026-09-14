@@ -182,6 +182,7 @@ class MainActivity : AppCompatActivity() {
         // User Buttons
         btnCreateUser.setOnClickListener { handleCreateUser() }
         btnRenameUser.setOnClickListener { showRenameDialog() } 
+        findViewById<Button>(R.id.btnDeleteUser).setOnClickListener { showDeleteUserDialog() }
         btnBackToHome.setOnClickListener { switchTab(viewDashboard) } // <-- 3. Idinagdag ang OnClickListener dito
         findViewById<Button>(R.id.btnCreateCloudAccount).setOnClickListener { showAuthenticationDialog() }
         findViewById<Button>(R.id.btnEditCloudEmail).setOnClickListener { showCloudEmailDialog() }
@@ -419,6 +420,35 @@ class MainActivity : AppCompatActivity() {
         } else {
             etNewUserName.error = "User name already exists!"
         }
+    }
+
+    private fun showDeleteUserDialog() {
+        val user = activeUser ?: return
+        if (dbHelper.allUsers.size <= 1) {
+            Toast.makeText(this, "You cannot delete the only user account.", Toast.LENGTH_LONG).show()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Delete active user?")
+            .setMessage("This will delete ${user.name} and all of its transactions, debts, and history logs.")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Delete") { _, _ ->
+                if (dbHelper.deleteUser(user.id)) {
+                    setupUserSpinner()
+                    loadData()
+                    activeUser?.let { remaining ->
+                        syncManager.sync(remaining.id) {
+                            it.exceptionOrNull()?.let { error ->
+                                Toast.makeText(this, "User deleted locally, but sync failed: ${error.message}",
+                                    Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                    Toast.makeText(this, "User deleted.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Unable to delete this user.", Toast.LENGTH_LONG).show()
+                }
+            }.show()
     }
 
     private fun loadData() {

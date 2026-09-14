@@ -125,13 +125,16 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
                 val auditRows = JSONArray()
                 for (i in 0 until audits.length()) {
                     val row = audits.getJSONObject(i)
+                    val payload = row.optJSONObject("payload")
+                        ?: JSONObject().put("user_id", userId)
+                    val exportedUserId = payload?.optInt("user_id", 0) ?: 0
+                    val budgetUserId = exportedUserId.takeIf { it > 0 } ?: userId
                     auditRows.put(JSONObject().put("user_id", remoteUserId)
                         .put("log_key", row.optString("record_key"))
-                        .put("budget_user_id",
-                            row.getJSONObject("payload").optInt("user_id", userId))
-                        .put("action", row.getJSONObject("payload").optString("action"))
-                        .put("details", row.getJSONObject("payload").optString("details"))
-                        .put("log_date", row.getJSONObject("payload").optString("date"))
+                        .put("budget_user_id", budgetUserId)
+                        .put("action", payload.optString("action"))
+                        .put("details", payload.optString("details"))
+                        .put("log_date", payload.optString("date"))
                         .put("updated_at", row.optString("updated_at"))
                         .put("deleted", row.optBoolean("deleted", false)))
                 }

@@ -158,10 +158,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             auditLogDatabase.deleteLogsByUser(userId).forEach { records.add(it to "audit_log") }
             db.delete(TABLE_USERS, "$COLUMN_USER_ID=?", arrayOf(userId.toString()))
             val timestamp = System.currentTimeMillis()
+            records.add("user-$userId" to "user")
             records.forEach { (key, type) ->
+                val payload = JSONObject().put("id", key.substringAfterLast("-").toIntOrNull() ?: -1)
+                    .put("user_id", userId).put("name", user.getString(0))
                 db.execSQL("INSERT OR REPLACE INTO sync_metadata(record_key,record_type,payload,updated_at,deleted) VALUES(?,?,?,?,1)",
-                    arrayOf(key, type, JSONObject().put("id", key.substringAfterLast("-").toIntOrNull() ?: -1)
-                        .put("user_id", userId).put("name", user.getString(0)).toString(), timestamp))
+                    arrayOf(key, type, payload.toString(), timestamp))
             }
             db.setTransactionSuccessful()
         } finally {
@@ -452,18 +454,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         val userId = getDebtUserId(id)
         val success = writableDatabase.update(TABLE_DEBTS, values, "$COLUMN_DEBT_ID=?",
             arrayOf(id.toString())) > 0
-        if (success && userId != -1) auditLogDatabase.addAuditLog(userId, "DEBT EDITED", "Edited debt: $name (-₱$amount)")
+        if (success && userId != -1) auditLogDatabase.addAuditLog(userId, "DEBT EDITED", "Changed debt paid status to $paid")
         return success
     }
 
     fun updateDebt(id: Int, name: String, amount: Double, dueDate: String?): Boolean {
+        val userId = getDebtUserId(id)
         val values = ContentValues().apply {
             put(COLUMN_DEBT_NAME, name)
             put(COLUMN_DEBT_AMOUNT, amount)
             put(COLUMN_DEBT_DUE_DATE, dueDate)
         }
-        return writableDatabase.update(TABLE_DEBTS, values, "$COLUMN_DEBT_ID=?",
+        val success = writableDatabase.update(TABLE_DEBTS, values, "$COLUMN_DEBT_ID=?",
             arrayOf(id.toString())) > 0
+        if (success && userId != -1) auditLogDatabase.addAuditLog(userId, "DEBT EDITED", "Edited debt: $name (-₱$amount)")
+        return success
     }
 
     fun deleteDebt(id: Int): Boolean {
