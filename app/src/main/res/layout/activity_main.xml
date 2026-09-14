@@ -49,7 +49,7 @@
                     android:id="@+id/tvActiveUserName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Active Account: Main Account"
+                    android:text="No account selected"
                     android:textColor="#64748B"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -315,20 +315,12 @@
                     android:layout_marginBottom="16dp" />
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Switch Active User:"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#475569" />
-
-                <Spinner
-                    android:id="@+id/spinnerUsersTab"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="6dp"
-                    android:layout_marginBottom="24dp"
-                    android:background="@android:drawable/btn_dropdown" />
+                    android:layout_height="wrap_content"
+                    android:text="Create and manage separate profiles for your personal, family, or business budgets."
+                    android:textColor="#64748B"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="18dp" />
 
                 <View
                     android:layout_width="match_parent"
@@ -339,7 +331,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Add New User Account:"
+                    android:text="Create a budget profile"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="#475569" />
@@ -361,7 +353,6 @@
                     android:textColor="#FFFFFF"
                     android:layout_marginTop="12dp" />
 
-                <!-- 🟢 DITO KO IDINAGDAG ANG RENAME BUTTON -->
                 <Button
                     android:id="@+id/btnRenameUser"
                     android:layout_width="match_parent"
@@ -397,7 +388,6 @@
                     android:text="Change cloud password"
                     android:layout_marginTop="8dp" />
 
-                <!-- 🟢 DITO KO IDINAGDAG ANG BACK TO HOME BUTTON -->
                 <Button
                     android:id="@+id/btnBackToHome"
                     android:layout_width="match_parent"
@@ -441,29 +431,48 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp"
+                    android:background="#0F5132"
+                    android:elevation="3dp">
+
+                    <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Debt Tracker"
-                    android:textSize="20sp"
+                    android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="#0F5132"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="#FFFFFF" />
+
+                    <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Keep track of what you owe and mark payments as they happen."
+                    android:textSize="12sp"
+                    android:textColor="#D1FAE5"
+                    android:layout_marginTop="4dp" />
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/btnAddDebt"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Add debt"
-                    android:backgroundTint="#334155"
+                    android:text="+  Add new debt"
+                    android:backgroundTint="#16A34A"
                     android:textColor="#FFFFFF" />
                 <TextView
+                    android:id="@+id/tvDebtSectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Debts (check paid)"
+                    android:text="Your debts"
                     android:textStyle="bold"
                     android:textSize="16sp"
-                    android:layout_marginTop="12dp" />
+                    android:textColor="#0F5132"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginBottom="8dp" />
                 <ScrollView
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
@@ -606,6 +615,16 @@
             android:background="?attr/selectableItemBackground" />
 
         <TextView
+            android:id="@+id/btnNavHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📜  History Logs"
+            android:textSize="16sp"
+            android:textColor="#1E293B"
+            android:padding="18dp"
+            android:background="?attr/selectableItemBackground" />
+
+        <TextView
             android:id="@+id/btnNavUser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -615,15 +634,31 @@
             android:padding="18dp"
             android:background="?attr/selectableItemBackground" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="#E2E8F0" />
+
         <TextView
-            android:id="@+id/btnNavHistory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📜  History Logs"
-            android:textSize="16sp"
-            android:textColor="#1E293B"
-            android:padding="18dp"
-            android:background="?attr/selectableItemBackground" />
+            android:text="ACTIVE BUDGET PROFILE"
+            android:textColor="#64748B"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:paddingStart="18dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="6dp" />
+
+        <Spinner
+            android:id="@+id/spinnerUsersTab"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:background="@android:drawable/btn_dropdown" />
 
     </LinearLayout>
 

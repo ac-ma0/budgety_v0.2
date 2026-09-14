@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
 
     private val dateTimeFormat = SimpleDateFormat("MMMM dd, yyyy - hh:mm a", Locale.ENGLISH)
 	
-    private var selectedUserId: Int = 1
+    private var selectedUserId: Int = -1
     
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var syncManager: SyncManager
@@ -387,10 +387,14 @@ class MainActivity : AppCompatActivity() {
         if (userList.isNotEmpty()) {
             spinnerUsers.setSelection(selectedIndex) 
             activeUser = userList[selectedIndex]     
+        } else {
+            activeUser = null
+            tvActiveUserName.text = "No account selected"
         }
 
         spinnerUsers.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position !in userList.indices) return
                 activeUser = userList[position]
                 tvActiveUserName.text = "Active Account: ${activeUser?.name}"
                 
@@ -452,7 +456,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadData() {
-        val user = activeUser ?: return
+        val user = activeUser ?: run {
+            tvActiveUserName.text = "No account selected"
+            return
+        }
         tvActiveUserName.text = "Active Account: ${user.name}"
 
         val incomeTotal = dbHelper.getTotalIncomeByUser(user.id)
@@ -836,11 +843,20 @@ class MainActivity : AppCompatActivity() {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(12, 8, 8, 8)
+                setBackgroundColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = 8
+                }
             }
             val check = CheckBox(this).apply {
                 text = "${debt.name}  ${String.format("₱%.2f", debt.amount)}" +
                     (if (debt.dueDate.isNullOrBlank()) "" else " • due ${debt.dueDate}")
                 isChecked = debt.paid
+                setTextColor(if (debt.paid) Color.rgb(100, 116, 139) else Color.rgb(15, 81, 50))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 setOnCheckedChangeListener { _, checked ->
                     if (dbHelper.setDebtPaid(debt.id, checked)) syncManager.sync(user.id) {
@@ -851,10 +867,12 @@ class MainActivity : AppCompatActivity() {
             row.addView(check)
             row.addView(Button(this).apply {
                 text = "Edit"
+                setTextColor(Color.rgb(15, 81, 50))
                 setOnClickListener { showEditDebtDialog(debt) }
             })
             row.addView(Button(this).apply {
                 text = "Delete"
+                setTextColor(Color.rgb(185, 28, 28))
                 setOnClickListener {
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle("Delete debt?")

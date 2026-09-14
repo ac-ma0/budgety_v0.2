@@ -17,9 +17,10 @@ class BudgetWidgetProvider : AppWidgetProvider() {
     companion object {
         fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val dbHelper = DatabaseHelper(context)
-            // Kinukuha natin by default ang User ID 1 (Main Account) para sa widget
-            val totalIncome = dbHelper.getTotalIncomeByUser(1)
-            val totalExpense = dbHelper.getTotalExpensesByUser(1)
+            val userId = context.getSharedPreferences("BudgetAppPrefs", Context.MODE_PRIVATE)
+                .getInt("LAST_USER_ID", -1)
+            val totalIncome = if (userId > 0) dbHelper.getTotalIncomeByUser(userId) else 0.0
+            val totalExpense = if (userId > 0) dbHelper.getTotalExpensesByUser(userId) else 0.0
             val balance = totalIncome - totalExpense
             val views = RemoteViews(context.packageName, R.layout.widget_budget)
             views.setTextViewText(R.id.widgetTvBalance, String.format("₱%.2f", balance))
