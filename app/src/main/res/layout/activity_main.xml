@@ -322,6 +322,25 @@
                     android:textSize="13sp"
                     android:layout_marginBottom="18dp" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your budget profiles"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="8dp" />
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp">
+                    <LinearLayout
+                        android:id="@+id/userRows"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </ScrollView>
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"

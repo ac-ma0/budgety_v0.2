@@ -58,7 +58,7 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
         }
     }
 
-    fun sync(userId: Int, callback: (Result<Unit>) -> Unit = {}) {
+    fun sync(userId: Int = -1, callback: (Result<Unit>) -> Unit = {}) {
         if (!client.isSignedIn) return
         executor.execute {
             val result = try {
@@ -95,14 +95,17 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
                     val cloudLocalId = payload.optInt("user_id", -1)
                     // Records without a known user belong to the currently
                     // selected local account rather than an invalid cloud id.
-                    payload.put("local_user_id", userIds[cloudLocalId]?.takeIf { it > 0 } ?: userId)
+                    val localUserId = userIds[cloudLocalId]?.takeIf { it > 0 }
+                    if (localUserId == null) continue
+                    payload.put("local_user_id", localUserId)
                     apply(row, payload)
                 }
                 for (i in 0 until remoteAudits.length()) {
                     val row = remoteAudits.getJSONObject(i)
                     val cloudUserId = row.optInt("budget_user_id", -1)
-                    val payload = JSONObject().put("user_id", userId)
-                        .put("local_user_id", userIds[cloudUserId]?.takeIf { it > 0 } ?: userId)
+                    val localUserId = userIds[cloudUserId]?.takeIf { it > 0 } ?: continue
+                    val payload = JSONObject().put("user_id", localUserId)
+                        .put("local_user_id", localUserId)
                         .put("action", row.optString("action"))
                         .put("details", row.optString("details"))
                         .put("date", row.optString("log_date"))
@@ -114,7 +117,7 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
                 // Only now publish local changes. Supabase and the local
                 // metadata table both enforce latest-update-wins, so an older
                 // local record cannot replace a newer downloaded record.
-                val local = db.exportSyncRecords(userId)
+                val local = if (userId > 0) db.exportSyncRecords(userId) else JSONArray()
                 val recordRows = ArrayList<JSONObject>()
                 for (i in 0 until local.length()) {
                     val row = local.getJSONObject(i)

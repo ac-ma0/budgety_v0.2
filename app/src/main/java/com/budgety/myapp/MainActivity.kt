@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
 
     // User Tab Views
     private lateinit var spinnerUsers: Spinner
+    private lateinit var userRows: LinearLayout
     private lateinit var etNewUserName: EditText
     private lateinit var btnCreateUser: Button
     private lateinit var btnRenameUser: Button 
@@ -148,6 +149,7 @@ class MainActivity : AppCompatActivity() {
 
         // User Tab Elements
         spinnerUsers = findViewById(R.id.spinnerUsersTab)
+        userRows = findViewById(R.id.userRows)
         etNewUserName = findViewById(R.id.etNewUserName)
         btnCreateUser = findViewById(R.id.btnCreateUser)
         btnRenameUser = findViewById(R.id.btnRenameUser) 
@@ -254,22 +256,17 @@ class MainActivity : AppCompatActivity() {
 		
         setupUserSpinner()
         if (syncManager.isSignedIn()) {
-            val startupUser = activeUser
-            if (startupUser == null) {
-                showSelectedTab()
-            } else {
-                syncManager.sync(startupUser.id) { result ->
-                    result.onSuccess {
-                        setupUserSpinner()
-                        showSelectedTab()
-                    }.onFailure {
-                        showSelectedTab()
-                        Toast.makeText(
-                            this,
-                            "Cloud data could not be loaded: ${it.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+            syncManager.sync(activeUser?.id ?: -1) { result ->
+                result.onSuccess {
+                    setupUserSpinner()
+                    showSelectedTab()
+                }.onFailure {
+                    showSelectedTab()
+                    Toast.makeText(
+                        this,
+                        "Cloud data could not be loaded: ${it.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         } else {
@@ -353,8 +350,7 @@ class MainActivity : AppCompatActivity() {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
             result.onSuccess {
                 dialog.dismiss()
-                activeUser?.let { user ->
-                    syncManager.sync(user.id) {
+                syncManager.sync(activeUser?.id ?: -1) {
                         it.onSuccess {
                             setupUserSpinner()
                             loadData()
@@ -362,7 +358,6 @@ class MainActivity : AppCompatActivity() {
                         it.onFailure { Toast.makeText(this, "Sync failed: ${it.message}",
                             Toast.LENGTH_LONG).show() }
                     }
-                }
             }.onFailure { Toast.makeText(this, it.message ?: "Authentication failed",
                 Toast.LENGTH_LONG).show() }
         }
@@ -407,6 +402,57 @@ class MainActivity : AppCompatActivity() {
             
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+        refreshUserRows()
+    }
+
+    private fun refreshUserRows() {
+        userRows.removeAllViews()
+        if (userList.isEmpty()) {
+            userRows.addView(TextView(this).apply {
+                text = "No budget profiles yet. Create one below."
+                setTextColor(Color.rgb(100, 116, 139))
+                setPadding(12, 16, 12, 16)
+            })
+            return
+        }
+        userList.forEach { user ->
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(12, 8, 8, 8)
+                setBackgroundColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = 8 }
+            }
+            val name = TextView(this).apply {
+                text = if (activeUser?.id == user.id) "✓ ${user.name}" else user.name
+                textSize = 16f
+                setTextColor(Color.rgb(15, 81, 50))
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            row.addView(name)
+            row.addView(Button(this).apply {
+                text = "Use"
+                setOnClickListener {
+                    activeUser = user
+                    sharedPreferences.edit().putInt("LAST_USER_ID", user.id).apply()
+                    setupUserSpinner()
+                    loadData()
+                }
+            })
+            row.addView(Button(this).apply {
+                text = "Edit"
+                setOnClickListener { showRenameDialog(user) }
+            })
+            row.addView(Button(this).apply {
+                text = "Delete"
+                setTextColor(Color.rgb(185, 28, 28))
+                setOnClickListener { showDeleteUserDialog(user) }
+            })
+            userRows.addView(row)
+        }
     }
 
     private fun handleCreateUser() {
@@ -427,7 +473,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDeleteUserDialog() {
-        val user = activeUser ?: return
+        activeUser?.let { showDeleteUserDialog(it) }
+    }
+
+    private fun showDeleteUserDialog(user: User) {
         if (dbHelper.allUsers.size <= 1) {
             Toast.makeText(this, "You cannot delete the only user account.", Toast.LENGTH_LONG).show()
             return
@@ -982,7 +1031,10 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showRenameDialog() {
-        val user = activeUser ?: return
+        activeUser?.let { showRenameDialog(it) }
+    }
+
+    private fun showRenameDialog(user: User) {
 
         val etNewName = EditText(this).apply {
             hint = "Enter new name"
