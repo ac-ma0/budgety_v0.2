@@ -23,7 +23,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     companion object {
         private const val DATABASE_NAME = "budgety_v3.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
 
         private const val TABLE_USERS = "users"
         private const val COLUMN_USER_ID = "id"
@@ -90,8 +90,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL(createDebts)
         db.execSQL("CREATE TABLE sync_metadata (record_key TEXT PRIMARY KEY, record_type TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0)")
 
-        val values = ContentValues().apply { put(COLUMN_USER_NAME, "Main Account") }
-        db.insert(TABLE_USERS, null, values)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -113,6 +111,25 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
         if (oldVersion < 4) {
             db.execSQL("CREATE TABLE IF NOT EXISTS sync_metadata (record_key TEXT PRIMARY KEY, record_type TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0)")
+        }
+        if (oldVersion < 5) {
+            // Remove the legacy account that older builds created automatically.
+            // User-created profiles are never affected because this is limited to
+            // the original id and exact legacy name.
+            val legacyAccountExists = db.query(
+                TABLE_USERS,
+                arrayOf(COLUMN_USER_ID),
+                "$COLUMN_USER_ID=? AND $COLUMN_USER_NAME=?",
+                arrayOf("1", "Main Account"),
+                null, null, null
+            ).use { it.moveToFirst() }
+            if (legacyAccountExists) {
+                db.delete(TABLE_EXPENSES, "$COLUMN_EXPENSE_USER_ID=?", arrayOf("1"))
+                db.delete(TABLE_INCOMES, "$COLUMN_INCOME_USER_ID=?", arrayOf("1"))
+                db.delete(TABLE_DEBTS, "$COLUMN_DEBT_USER_ID=?", arrayOf("1"))
+                db.delete(TABLE_USERS, "$COLUMN_USER_ID=? AND $COLUMN_USER_NAME=?",
+                    arrayOf("1", "Main Account"))
+            }
         }
     }
 
