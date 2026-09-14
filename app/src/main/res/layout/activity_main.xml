@@ -314,22 +314,29 @@
                     android:textColor="#0F5132"
                     android:layout_marginBottom="16dp" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Create and manage separate profiles for your personal, family, or business budgets."
-                    android:textColor="#64748B"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="18dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Your budget profiles"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#475569"
-                    android:layout_marginBottom="8dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Your budget profiles"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#475569" />
+                    <ImageButton
+                        android:id="@+id/btnAddUser"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_input_add"
+                        android:contentDescription="Add budget profile"
+                        android:tint="#0F5132"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+                </LinearLayout>
 
                 <ScrollView
                     android:layout_width="match_parent"
@@ -347,47 +354,6 @@
                     android:background="#E2E8F0"
                     android:layout_marginBottom="24dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Create a budget profile"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#475569" />
-
-                <EditText
-                    android:id="@+id/etNewUserName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Enter User Name (e.g. Business, Juan)"
-                    android:layout_marginTop="6dp"
-                    android:inputType="textCapWords" />
-
-                <Button
-                    android:id="@+id/btnCreateUser"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Create User"
-                    android:backgroundTint="#0F5132"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginTop="12dp" />
-
-                <Button
-                    android:id="@+id/btnRenameUser"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Rename Active User"
-                    android:backgroundTint="#334155"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginTop="8dp" />
-                <Button
-                    android:id="@+id/btnDeleteUser"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Delete Active User"
-                    android:backgroundTint="#B91C1C"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginTop="8dp" />
                 <Button
                     android:id="@+id/btnCreateCloudAccount"
                     android:layout_width="match_parent"

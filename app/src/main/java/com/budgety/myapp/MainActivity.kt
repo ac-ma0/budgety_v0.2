@@ -74,9 +74,7 @@ class MainActivity : AppCompatActivity() {
     // User Tab Views
     private lateinit var spinnerUsers: Spinner
     private lateinit var userRows: LinearLayout
-    private lateinit var etNewUserName: EditText
-    private lateinit var btnCreateUser: Button
-    private lateinit var btnRenameUser: Button 
+    private lateinit var btnAddUser: ImageButton
     private lateinit var btnBackToHome: Button // <-- 1. Idinagdag ang declaration dito
     private lateinit var debtRows: LinearLayout
 
@@ -150,9 +148,7 @@ class MainActivity : AppCompatActivity() {
         // User Tab Elements
         spinnerUsers = findViewById(R.id.spinnerUsersTab)
         userRows = findViewById(R.id.userRows)
-        etNewUserName = findViewById(R.id.etNewUserName)
-        btnCreateUser = findViewById(R.id.btnCreateUser)
-        btnRenameUser = findViewById(R.id.btnRenameUser) 
+        btnAddUser = findViewById(R.id.btnAddUser)
         btnBackToHome = findViewById(R.id.btnBackToHome) // <-- 2. Idinagdag ang findViewById dito
         debtRows = findViewById(R.id.debtRows)
 
@@ -182,9 +178,7 @@ class MainActivity : AppCompatActivity() {
         btnDashAddExpense.setOnClickListener { showExpenseDialog(null) }
 
         // User Buttons
-        btnCreateUser.setOnClickListener { handleCreateUser() }
-        btnRenameUser.setOnClickListener { showRenameDialog() } 
-        findViewById<Button>(R.id.btnDeleteUser).setOnClickListener { showDeleteUserDialog() }
+        btnAddUser.setOnClickListener { showCreateUserDialog() }
         btnBackToHome.setOnClickListener { switchTab(viewDashboard) } // <-- 3. Idinagdag ang OnClickListener dito
         findViewById<Button>(R.id.btnCreateCloudAccount).setOnClickListener { showAuthenticationDialog() }
         findViewById<Button>(R.id.btnEditCloudEmail).setOnClickListener { showCloudEmailDialog() }
@@ -434,20 +428,19 @@ class MainActivity : AppCompatActivity() {
             }
             row.addView(name)
             row.addView(Button(this).apply {
-                text = "Use"
-                setOnClickListener {
-                    activeUser = user
-                    sharedPreferences.edit().putInt("LAST_USER_ID", user.id).apply()
-                    setupUserSpinner()
-                    loadData()
-                }
-            })
-            row.addView(Button(this).apply {
                 text = "Edit"
+                textSize = 12f
+                minHeight = 0
+                minimumHeight = 0
+                setPadding(12, 0, 12, 0)
                 setOnClickListener { showRenameDialog(user) }
             })
             row.addView(Button(this).apply {
                 text = "Delete"
+                textSize = 12f
+                minHeight = 0
+                minimumHeight = 0
+                setPadding(10, 0, 10, 0)
                 setTextColor(Color.rgb(185, 28, 28))
                 setOnClickListener { showDeleteUserDialog(user) }
             })
@@ -455,25 +448,45 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleCreateUser() {
-        val name = etNewUserName.text.toString().trim()
-        if (name.isEmpty()) {
-            etNewUserName.error = "User name is required!"
-            return
+    private fun showCreateUserDialog() {
+        val input = EditText(this).apply {
+            hint = "Profile name"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            setPadding(16, 12, 16, 12)
         }
-
-        if (dbHelper.addUser(name)) {
-            Toast.makeText(this, "User added successfully!", Toast.LENGTH_SHORT).show()
-            etNewUserName.text.clear()
-            setupUserSpinner()
-            activeUser?.let { syncManager.sync(it.id) }
-        } else {
-            etNewUserName.error = "User name already exists!"
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 0, 32, 0)
+            addView(TextView(this@MainActivity).apply {
+                text = "Create a separate profile for a personal, family, or business budget."
+                setTextColor(Color.rgb(100, 116, 139))
+                textSize = 13f
+                setPadding(0, 0, 0, 12)
+            })
+            addView(input)
         }
-    }
-
-    private fun showDeleteUserDialog() {
-        activeUser?.let { showDeleteUserDialog(it) }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("New budget profile")
+            .setView(container)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Create", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val name = input.text.toString().trim()
+                if (name.isEmpty()) {
+                    input.error = "Enter a profile name"
+                } else if (dbHelper.addUser(name)) {
+                    Toast.makeText(this, "Profile created.", Toast.LENGTH_SHORT).show()
+                    setupUserSpinner()
+                    activeUser?.let { syncManager.sync(it.id) }
+                    dialog.dismiss()
+                } else {
+                    input.error = "A profile with this name already exists"
+                }
+            }
+        }
+        dialog.show()
     }
 
     private fun showDeleteUserDialog(user: User) {
@@ -482,10 +495,10 @@ class MainActivity : AppCompatActivity() {
             return
         }
         AlertDialog.Builder(this)
-            .setTitle("Delete active user?")
-            .setMessage("This will delete ${user.name} and all of its transactions, debts, and history logs.")
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Delete") { _, _ ->
+            .setTitle("Delete profile?")
+            .setMessage("Delete “${user.name}” and all of its transactions, debts, and history logs? This cannot be undone.")
+            .setNegativeButton("Keep profile", null)
+            .setPositiveButton("Delete profile") { _, _ ->
                 if (dbHelper.deleteUser(user.id)) {
                     setupUserSpinner()
                     loadData()
@@ -1037,14 +1050,27 @@ class MainActivity : AppCompatActivity() {
     private fun showRenameDialog(user: User) {
 
         val etNewName = EditText(this).apply {
-            hint = "Enter new name"
+            hint = "Profile name"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
             setText(user.name)
+            setPadding(16, 12, 16, 12)
+        }
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 0, 32, 0)
+            addView(TextView(this@MainActivity).apply {
+                text = "Choose a clear name for this budget profile."
+                setTextColor(Color.rgb(100, 116, 139))
+                textSize = 13f
+                setPadding(0, 0, 0, 12)
+            })
+            addView(etNewName)
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Rename Account")
-            .setView(etNewName)
-            .setPositiveButton("Save") { _, _ ->
+            .setTitle("Edit profile")
+            .setView(container)
+            .setPositiveButton("Save changes") { _, _ ->
                 val newName = etNewName.text.toString().trim()
                 if (newName.isNotEmpty() && newName != user.name) {
                     renameUser(user.id, newName)
