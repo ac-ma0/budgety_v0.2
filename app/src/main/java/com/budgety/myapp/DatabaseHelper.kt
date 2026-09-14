@@ -161,7 +161,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             records.add("user-$userId" to "user")
             records.forEach { (key, type) ->
                 val payload = JSONObject().put("id", key.substringAfterLast("-").toIntOrNull() ?: -1)
-                    .put("user_id", userId).put("name", user.getString(0))
+                    .put("user_id", userId).put("name", user)
                 db.execSQL("INSERT OR REPLACE INTO sync_metadata(record_key,record_type,payload,updated_at,deleted) VALUES(?,?,?,?,1)",
                     arrayOf(key, type, payload.toString(), timestamp))
             }
