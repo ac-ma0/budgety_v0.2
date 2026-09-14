@@ -390,7 +390,7 @@ class MainActivity : AppCompatActivity() {
                 activeUser?.let {
                     sharedPreferences.edit().putInt("LAST_USER_ID", it.id).apply()
                 }
-                
+                refreshUserRows()
                 loadData()
             }
             
@@ -413,7 +413,7 @@ class MainActivity : AppCompatActivity() {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(12, 8, 8, 8)
+                setPadding(10, 6, 6, 6)
                 setBackgroundColor(Color.WHITE)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -422,25 +422,25 @@ class MainActivity : AppCompatActivity() {
             }
             val name = TextView(this).apply {
                 text = if (activeUser?.id == user.id) "✓ ${user.name}" else user.name
-                textSize = 16f
+                textSize = 15f
                 setTextColor(Color.rgb(15, 81, 50))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
             row.addView(name)
             row.addView(Button(this).apply {
                 text = "Edit"
-                textSize = 12f
+                textSize = 11f
                 minHeight = 0
                 minimumHeight = 0
-                setPadding(12, 0, 12, 0)
+                setPadding(8, 0, 8, 0)
                 setOnClickListener { showRenameDialog(user) }
             })
             row.addView(Button(this).apply {
                 text = "Delete"
-                textSize = 12f
+                textSize = 11f
                 minHeight = 0
                 minimumHeight = 0
-                setPadding(10, 0, 10, 0)
+                setPadding(6, 0, 6, 0)
                 setTextColor(Color.rgb(185, 28, 28))
                 setOnClickListener { showDeleteUserDialog(user) }
             })
