@@ -115,21 +115,22 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
                 // metadata table both enforce latest-update-wins, so an older
                 // local record cannot replace a newer downloaded record.
                 val local = db.exportSyncRecords(userId)
-                val records = JSONArray()
+                val recordRows = ArrayList<JSONObject>()
                 for (i in 0 until local.length()) {
                     val row = local.getJSONObject(i)
                     row.put("user_id", remoteUserId)
-                    records.put(row)
+                    recordRows.add(row)
                 }
+                val records = deduplicateRows(recordRows, "record_key")
                 val audits = db.exportAuditSyncRecords()
-                val auditRows = JSONArray()
+                val auditRowsList = ArrayList<JSONObject>()
                 for (i in 0 until audits.length()) {
                     val row = audits.getJSONObject(i)
                     val payload = row.optJSONObject("payload")
                         ?: JSONObject().put("user_id", userId)
                     val exportedUserId = payload?.optInt("user_id", 0) ?: 0
                     val budgetUserId = exportedUserId.takeIf { it > 0 } ?: userId
-                    auditRows.put(JSONObject().put("user_id", remoteUserId)
+                    auditRowsList.add(JSONObject().put("user_id", remoteUserId)
                         .put("log_key", row.optString("record_key"))
                         .put("budget_user_id", budgetUserId)
                         .put("action", payload.optString("action"))
@@ -138,6 +139,7 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
                         .put("updated_at", row.optString("updated_at"))
                         .put("deleted", row.optBoolean("deleted", false)))
                 }
+                val auditRows = deduplicateRows(auditRowsList, "log_key")
                 if (records.length() > 0) {
                     client.upsertRecords(records)
                     val uploadedKeys = HashSet<String>()
@@ -181,6 +183,22 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
         val timestamp = parseTimestamp(row.optString("updated_at"))
         db.applyRemoteRecord(row.optString("record_key"), row.optString("record_type"),
             payload, timestamp, row.optBoolean("deleted", false))
+    }
+
+    private fun deduplicateRows(rows: List<JSONObject>, keyField: String): JSONArray {
+        val unique = LinkedHashMap<String, JSONObject>()
+        rows.forEach { row ->
+            val key = row.optString(keyField)
+            if (key.isBlank()) return@forEach
+            val previous = unique[key]
+            if (previous == null ||
+                row.optString("updated_at") >= previous.optString("updated_at")) {
+                unique[key] = row
+            }
+        }
+        val result = JSONArray()
+        unique.values.forEach { result.put(it) }
+        return result
     }
 
     private fun currentRemoteUserId(): String {
