@@ -175,7 +175,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             auditLogDatabase.deleteLogsByUser(userId).forEach { records.add(it to "audit_log") }
             db.delete(TABLE_USERS, "$COLUMN_USER_ID=?", arrayOf(userId.toString()))
             val timestamp = System.currentTimeMillis()
-            records.add("user-$userId" to "user")
+            var userRecordKey = "user-$userId"
+            db.rawQuery("SELECT record_key FROM sync_metadata WHERE record_type='user' AND payload LIKE ?",
+                arrayOf("%\"name\":\"${user.replace("\"", "\\\"")}\"%")).use {
+                if (it.moveToFirst()) userRecordKey = it.getString(0)
+            }
+            records.add(userRecordKey to "user")
             records.forEach { (key, type) ->
                 val payload = JSONObject().put("id", key.substringAfterLast("-").toIntOrNull() ?: -1)
                     .put("user_id", userId).put("name", user)
@@ -704,5 +709,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     fun findLocalUserId(name: String): Int =
         readableDatabase.query(TABLE_USERS, arrayOf(COLUMN_USER_ID), "$COLUMN_USER_NAME=?",
             arrayOf(name), null, null, null).use { if (it.moveToFirst()) it.getInt(0) else -1 }
+
+    fun hasDeletedUserTombstone(name: String): Boolean =
+        readableDatabase.rawQuery(
+            "SELECT payload FROM sync_metadata WHERE record_type='user' AND deleted=1",
+            null
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                if (JSONObject(cursor.getString(0)).optString("name") == name) return@use true
+            }
+            false
+        }
 
 }

@@ -79,6 +79,13 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
                 // importing transactions/debts from another device.
                 for (row in users) {
                     val payload = row.optJSONObject("payload") ?: continue
+                    val remoteName = payload.optString("name")
+                    if (!row.optBoolean("deleted", false) && db.hasDeletedUserTombstone(remoteName)) {
+                        // A local deletion is authoritative until its newer
+                        // tombstone is accepted by the cloud. Do not recreate
+                        // this user while performing the download-first sync.
+                        continue
+                    }
                     val cloudId = payload.optInt("id", -1)
                     if (cloudId >= 0) {
                         userIds[cloudId] = if (row.optBoolean("deleted", false)) {
