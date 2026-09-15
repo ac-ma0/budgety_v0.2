@@ -32,15 +32,6 @@ class SupabaseClient(context: Context) {
         return authenticate("signup", email, password)
     }
 
-    fun resendSignupEmail(email: String) {
-        request(
-            "POST",
-            "/auth/v1/resend",
-            JSONObject().put("type", "signup").put("email", email).toString(),
-            false
-        )
-    }
-
     fun signOut() {
         preferences.edit().remove("access_token").remove("user_id").remove("email").apply()
     }

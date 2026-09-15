@@ -345,7 +345,9 @@ class MainActivity : AppCompatActivity() {
             result.onSuccess {
                 dialog.dismiss()
                 if (!it) {
-                    showEmailVerificationDialog(email, password)
+                    Toast.makeText(this,
+                        "Account created. Please confirm your email, then sign in to enable cloud sync.",
+                        Toast.LENGTH_LONG).show()
                     return@onSuccess
                 }
                 syncManager.sync(activeUser?.id ?: -1) {
@@ -359,38 +361,6 @@ class MainActivity : AppCompatActivity() {
             }.onFailure { Toast.makeText(this, it.message ?: "Authentication failed",
                 Toast.LENGTH_LONG).show() }
         }
-    }
-
-    private fun showEmailVerificationDialog(email: String, password: String) {
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("Verify your email")
-            .setMessage(
-                "We sent a verification link to $email. " +
-                    "Open the email and tap the link before signing in."
-            )
-            .setNegativeButton("Close", null)
-            .setNeutralButton("Resend email", null)
-            .setPositiveButton("I verified — Sign in", null)
-            .create()
-        dialog.setOnShowListener {
-            val resendButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            resendButton.setOnClickListener {
-                resendButton.isEnabled = false
-                syncManager.resendVerificationEmail(email) { result ->
-                    resendButton.isEnabled = true
-                    Toast.makeText(
-                        this,
-                        if (result.isSuccess) "Verification email sent again."
-                        else result.exceptionOrNull()?.message ?: "Could not resend verification email.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                authenticate(email, password, false, dialog)
-            }
-        }
-        dialog.show()
     }
 
 	private fun setupUserSpinner() {

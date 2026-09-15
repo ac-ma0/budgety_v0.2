@@ -44,9 +44,6 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
     fun updatePassword(password: String, callback: (Result<Unit>) -> Unit) =
         runAuthAction({ client.updatePassword(password) }, callback)
 
-    fun resendVerificationEmail(email: String, callback: (Result<Unit>) -> Unit) =
-        runAuthAction({ client.resendSignupEmail(email) }, callback)
-
     private fun runAuthAction(action: () -> Unit, callback: (Result<Unit>) -> Unit) {
         executor.execute {
             val result = try {
