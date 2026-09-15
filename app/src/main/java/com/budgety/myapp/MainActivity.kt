@@ -314,30 +314,6 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(40, 8, 40, 0)
         }
-
-        private fun updateCloudAccountControls() {
-            val signedIn = syncManager.isSignedIn()
-            tvCloudAccountStatus.text = if (signedIn) {
-                "Signed in as\n${syncManager.signedInEmail ?: "Cloud account"}"
-            } else {
-                "Not signed in\nCloud sync is unavailable"
-            }
-            btnNavLogin.isEnabled = !signedIn
-            btnNavLogout.isEnabled = signedIn
-        }
-
-        private fun confirmCloudLogout() {
-            AlertDialog.Builder(this)
-                .setTitle("Log out of cloud account?")
-                .setMessage("Your local data will remain on this device. Cloud sync will pause until you log in again.")
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Log out") { _, _ ->
-                    syncManager.signOut()
-                    updateCloudAccountControls()
-                    Toast.makeText(this, "Logged out of cloud account.", Toast.LENGTH_SHORT).show()
-                }
-                .show()
-        }
         val email = EditText(this).apply {
             hint = "Email"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
@@ -364,6 +340,30 @@ class MainActivity : AppCompatActivity() {
             }
         }
         dialog.show()
+    }
+
+    private fun updateCloudAccountControls() {
+        val signedIn = syncManager.isSignedIn()
+        tvCloudAccountStatus.text = if (signedIn) {
+            "Signed in as\n${syncManager.signedInEmail ?: "Cloud account"}"
+        } else {
+            "Not signed in\nCloud sync is unavailable"
+        }
+        btnNavLogin.isEnabled = !signedIn
+        btnNavLogout.isEnabled = signedIn
+    }
+
+    private fun confirmCloudLogout() {
+        AlertDialog.Builder(this)
+            .setTitle("Log out of cloud account?")
+            .setMessage("Your local data will remain on this device. Cloud sync will pause until you log in again.")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Log out") { _, _ ->
+                syncManager.signOut()
+                updateCloudAccountControls()
+                Toast.makeText(this, "Logged out of cloud account.", Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
 
     private fun authenticate(email: String, password: String, register: Boolean, dialog: AlertDialog) {
