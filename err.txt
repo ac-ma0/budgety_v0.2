@@ -1,18 +1,373 @@
-server is running...
-******/dbclient: Caution, skipping hostkey check for localhost
-> Configure project :appWARNING: The option setting 'android.aapt2FromMavenOverride=/usr/bin/aapt2' is experimental and unsupported.
-> Task :app:preBuild UP-TO-DATE> Task :app:preDebugBuild UP-TO-DATE> Task :app:compileDebugAidl NO-SOURCE> Task :app:compileDebugRenderscript NO-SOURCE> Task :app:checkDebugManifest UP-TO-DATE
-> Task :app:generateDebugBuildConfig UP-TO-DATE
-> Task :app:mainApkListPersistenceDebug UP-TO-DATE> Task :app:generateDebugResValues UP-TO-DATE> Task :app:generateDebugResources UP-TO-DATE
-> Task :app:mergeDebugResources UP-TO-DATE> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
-> Task :app:processDebugManifest UP-TO-DATE
-> Task :app:processDebugResources UP-TO-DATE
-> Task :app:compileDebugKotlin
-e: /storage/internal_new/project/budgety_v0.2/app/src/main/java/com/budgety/myapp/MainActivity.kt: (189, 43): Unresolved reference: confirmCloudLogoute: /storage/internal_new/project/budgety_v0.2/app/src/main/java/com/budgety/myapp/MainActivity.kt: (260, 9): Unresolved reference: updateCloudAccountControls
-e: /storage/internal_new/project/budgety_v0.2/app/src/main/java/com/budgety/myapp/MainActivity.kt: (318, 9): Modifier 'private' is not applicable to 'local function'e: /storage/internal_new/project/budgety_v0.2/app/src/main/java/com/budgety/myapp/MainActivity.kt: (329, 9): Modifier 'private' is not applicable to 'local function'
-e: /storage/internal_new/project/budgety_v0.2/app/src/main/java/com/budgety/myapp/MainActivity.kt: (380, 17): Unresolved reference: updateCloudAccountControls
-> Task :app:compileDebugKotlin FAILED
-FAILURE: Build failed with an exception.
-* What went wrong:Execution failed for task ':app:compileDebugKotlin'.> Compilation error. See log for more details* Try:Run with --stacktrace option to get the stack trace. Run with --info or --debug option to get more log output. Run with --scan to get full insights.* Get more help at https://help.gradle.org
-Deprecated Gradle features were used in this build, making it incompatible with Gradle 7.0.Use '--warning-mode all' to show the individual deprecation warnings.See https://docs.gradle.org/6.1.1/userguide/command_line_interface.html#sec:command_line_warningsBUILD FAILED in 19s9 actionable tasks: 1 executed, 8 up-to-date
-Failed: Command failed with: 1
+APP NAME: MoneyTrack PH
+
+Build a simple but complete Android money-monitoring application using Kotlin + Jetpack Compose + Supabase + Room.
+
+1. SUPABASE SETUP
+
+Use the following Supabase project:
+
+Supabase URL:
+"https://rkwgxsxepldzvbajtlgg.supabase.co"
+
+Supabase Publishable Key:
+"sb_publishable_-LEQQFtT6qMcMHs6fDlIJA_wSpyIENU"
+
+Use Supabase Kotlin SDK ("supabase-kt") with the required modules such as Postgrest and Authentication.
+
+Example dependency:
+
+implementation("io.github.jan-tennert.supabase:supabase-kt:VERSION")
+
+Supabase client example:
+
+val supabase = createSupabaseClient(
+    supabaseUrl = "https://rkwgxsxepldzvbajtlgg.supabase.co",
+    supabaseKey = "sb_publishable_-LEQQFtT6qMcMHs6fDlIJA_wSpyIENU"
+) {
+    install(Postgrest)
+}
+
+Configure the SDK according to the current compatible "supabase-kt" version and Android project requirements.
+
+Optional Agent Skills:
+
+npx skills add supabase/agent-skills
+
+Do NOT use a Supabase "service_role" or secret key inside the Android application.
+
+2. DATABASE
+
+Create the following Supabase PostgreSQL tables:
+
+- profiles
+- user_permissions
+- income
+- expenses
+- debts
+- debt_monthly_payments
+- audit_logs
+- categories
+- app_settings
+
+Create proper foreign keys, timestamps, indexes, and constraints.
+
+Use UUID/user IDs where appropriate.
+
+3. SECURITY
+
+Implement Supabase Authentication.
+
+Use Row Level Security (RLS).
+
+Default behavior:
+
+- Users can access their own records.
+- Admin can access all records.
+- Admin can grant additional permissions to specific users.
+- Permissions must be checked both in the UI and database policies.
+
+Never rely only on hidden UI buttons for security.
+
+4. USER MANAGEMENT
+
+Roles:
+
+Admin
+
+- View all users
+- Add users
+- Edit users
+- Manage permissions
+- View all transactions
+- View complete audit history
+
+User
+
+- Normally access their own data
+- Can receive additional permissions from Admin
+
+Possible permissions:
+
+- View all records
+- Add income
+- Edit income
+- Delete income
+- Add expenses
+- Edit expenses
+- Delete expenses
+- Manage debts
+- View reports
+- View history
+- Manage users
+
+5. DASHBOARD
+
+Create a dashboard containing:
+
+Weekly Summary
+
+- Income
+- Expenses
+- Net balance
+- Debt payments
+- Outstanding debt
+
+Monthly Summary
+
+- Income
+- Expenses
+- Net balance
+- Outstanding debt
+
+Buttons:
+
+- + Income
+- + Expense
+- + Debt Payment
+
+Also include:
+
+- Recent transactions
+- Sort
+- Filter
+- Basic charts
+
+6. INCOME
+
+Fields:
+
+- Amount
+- Category/source
+- Date
+- Notes
+- Created by
+- Created date
+
+Functions:
+
+- Add
+- Edit
+- Delete
+- Search
+- Sort
+- Filter
+
+7. EXPENSES
+
+Fields:
+
+- Amount
+- Category
+- Date
+- Notes
+- Created by
+- Created date
+
+Functions:
+
+- Add
+- Edit
+- Delete
+- Search
+- Sort
+- Filter
+
+8. DEBT TRACKER
+
+Fields:
+
+- Borrower/debtor
+- Principal amount
+- Interest rate
+- Interest type
+- Number of months
+- Start date
+- Due date
+- Monthly expected payment
+- Notes
+- Status
+
+Support flexible interest calculations.
+
+The app should calculate the expected monthly amount and total payable based on the selected interest settings.
+
+IMPORTANT:
+
+Do NOT automatically mark a month as paid.
+
+The user manually chooses:
+
+- Paid
+- Unpaid
+- Partially Paid
+
+Create a monthly payment schedule using the "debt_monthly_payments" table.
+
+Allow the user to record a payment manually.
+
+9. HISTORY / AUDIT LOG
+
+Every important action must be recorded.
+
+Examples:
+
+- Add income
+- Edit income
+- Delete income
+- Add expense
+- Edit expense
+- Delete expense
+- Add debt
+- Edit debt
+- Delete debt
+- Add debt payment
+- Change payment status
+- Login
+- Logout
+- User creation
+- Permission changes
+
+Audit fields:
+
+- id
+- user_id
+- action
+- record_type
+- record_id
+- old_value
+- new_value
+- timestamp
+
+Deleted records must still have their audit history.
+
+Normal users must NOT be able to permanently delete audit logs.
+
+10. OFFLINE MODE
+
+The application must continue working without internet.
+
+Use:
+
+Room Database → Local Storage
+
+When internet becomes available:
+
+Room → Supabase synchronization
+
+Support:
+
+- Offline add
+- Offline edit
+- Offline delete
+- Offline debt payment
+- Offline history
+- Automatic synchronization
+
+Prevent duplicate records during synchronization.
+
+Use UUIDs/client-generated IDs where appropriate.
+
+Handle synchronization conflicts safely.
+
+11. REPORTS
+
+Basic charts:
+
+- Weekly Income vs Expenses
+- Monthly Income vs Expenses
+- Expenses by Category
+- Debt Overview
+- Net Cash Flow
+
+Keep reports simple for the MVP.
+
+12. NAVIGATION DRAWER
+
+Create:
+
+Dashboard
+Income
+Expenses
+Debt Tracker
+History
+Reports
+Users
+Settings
+My Profile
+Logout
+
+Only display options that the current user has permission to access.
+
+13. CUSTOM THEME
+
+Settings should allow:
+
+- Background color
+- Font/text color
+- Accent color
+- Light mode
+- Dark mode
+- Reset theme
+
+Save the selected theme locally.
+
+Restore the theme when the application starts.
+
+14. ANDROID TECHNOLOGY
+
+Use:
+
+- Kotlin
+- Jetpack Compose
+- Material 3
+- MVVM
+- Repository Pattern
+- Kotlin Coroutines
+- StateFlow/Flow
+- Room
+- Supabase Auth
+- Supabase PostgreSQL
+- Supabase RLS
+- Navigation Compose
+
+Keep the project modular and maintainable.
+
+15. DEVELOPMENT ORDER
+
+Build the application in this order:
+
+1. Create Android Kotlin project
+2. Configure Supabase SDK
+3. Connect to the provided Supabase project
+4. Create PostgreSQL database schema
+5. Configure RLS/security policies
+6. Implement Authentication
+7. Implement User/Permission system
+8. Implement Room offline database
+9. Implement Dashboard
+10. Implement Income
+11. Implement Expenses
+12. Implement Debt Tracker
+13. Implement Monthly Debt Payments
+14. Implement Audit History
+15. Implement Supabase synchronization
+16. Implement Reports/Charts
+17. Implement Navigation Drawer
+18. Implement Theme customization
+19. Test offline/online synchronization
+20. Test security and permissions
+21. Build final APK
+
+16. MVP PRIORITY
+
+Focus first on a working MVP.
+
+The most important requirements are:
+
+Login → Dashboard → Income → Expenses → Debt Tracker → History → Offline Mode → Supabase Sync → User Permissions
+
+Do not add unnecessary complexity until these features are working correctly.
+
+Before generating the final code, verify that the Supabase SDK version, imports, authentication API, Postgrest API, and database/RLS syntax are compatible with the current project.
+
+Generate complete, runnable Kotlin code rather than pseudocode.
