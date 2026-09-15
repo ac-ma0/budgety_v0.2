@@ -114,7 +114,13 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
                 for (i in 0 until remoteAudits.length()) {
                     val row = remoteAudits.getJSONObject(i)
                     val cloudUserId = row.optInt("budget_user_id", -1)
-                    val localUserId = userIds[cloudUserId]?.takeIf { it > 0 } ?: continue
+                    // Older audit rows used the local id directly. Keep those
+                    // usable on the originating device while preferring the
+                    // cloud-to-local mapping for rows from another device.
+                    val localUserId = (userIds[cloudUserId]
+                        ?: cloudUserId.takeIf { candidate ->
+                            db.allUsers.any { it.id == candidate }
+                        })?.takeIf { it > 0 } ?: continue
                     val payload = JSONObject().put("user_id", localUserId)
                         .put("local_user_id", localUserId)
                         .put("action", row.optString("action"))
@@ -143,7 +149,15 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
                     val payload = row.optJSONObject("payload")
                         ?: JSONObject().put("user_id", userId)
                     val exportedUserId = payload?.optInt("user_id", 0) ?: 0
-                    val budgetUserId = exportedUserId.takeIf { it > 0 } ?: userId
+                    // Audit rows store the numeric id from the local SQLite
+                    // database. Convert it back to the cloud record id before
+                    // upload so another device can map the log to its user.
+                    val cloudBudgetUserId = userIds.entries.firstOrNull {
+                        it.value == exportedUserId
+                    }?.key
+                    val budgetUserId = cloudBudgetUserId
+                        ?: exportedUserId.takeIf { it > 0 }
+                        ?: userId
                     auditRowsList.add(JSONObject().put("user_id", remoteUserId)
                         .put("log_key", row.optString("record_key"))
                         .put("budget_user_id", budgetUserId)
