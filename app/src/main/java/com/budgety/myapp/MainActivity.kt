@@ -120,6 +120,7 @@ class MainActivity : AppCompatActivity() {
         dbHelper = DatabaseHelper(this)
         auditLogDatabase = AuditLogDatabaseHelper(this)
         sharedPreferences = getSharedPreferences("BudgetAppPrefs", Context.MODE_PRIVATE)
+        currentTab = sharedPreferences.getInt("CURRENT_TAB", 0)
         syncManager = SyncManager(this, dbHelper)
 
         drawerLayout = findViewById(R.id.drawerLayout)
@@ -211,9 +212,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         btnToggleDarkMode.setOnClickListener {
-            sharedPreferences.edit().putInt("CURRENT_TAB", currentTab).apply()
+            sharedPreferences.edit().putInt("CURRENT_TAB", currentTab).commit()
             val dark = sharedPreferences.getBoolean("DARK_MODE", false).not()
-            sharedPreferences.edit().putBoolean("DARK_MODE", dark).apply()
+            sharedPreferences.edit().putBoolean("DARK_MODE", dark).commit()
             updateDarkModeIcon(btnToggleDarkMode, dark)
             AppCompatDelegate.setDefaultNightMode(
                 if (dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
