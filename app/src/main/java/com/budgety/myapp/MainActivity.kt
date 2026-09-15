@@ -265,6 +265,8 @@ class MainActivity : AppCompatActivity() {
             syncManager.sync(activeUser?.id ?: -1) { result ->
                 result.onSuccess {
                     setupUserSpinner()
+                    // Refresh downloaded transactions and audit logs without changing tabs.
+                    loadData()
                 }.onFailure {
                     Toast.makeText(
                         this,
