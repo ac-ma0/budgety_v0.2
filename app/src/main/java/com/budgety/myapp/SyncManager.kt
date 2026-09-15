@@ -17,6 +17,7 @@ class SyncManager(context: Context, private val db: DatabaseHelper) {
 
     fun isSignedIn(): Boolean = client.isSignedIn
     val signedInEmail: String? get() = client.email
+    fun signOut() = client.signOut()
     fun currentEmail(callback: (Result<String>) -> Unit) = executor.execute {
         val result = try { Result.success(client.currentUserEmail()) }
         catch (e: Exception) { Result.failure<String>(e) }

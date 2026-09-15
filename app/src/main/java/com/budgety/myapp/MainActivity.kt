@@ -76,6 +76,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var userRows: LinearLayout
     private lateinit var btnAddUser: ImageButton
     private lateinit var btnBackToHome: Button // <-- 1. Idinagdag ang declaration dito
+    private lateinit var tvCloudAccountStatus: TextView
+    private lateinit var btnNavLogin: Button
+    private lateinit var btnNavLogout: Button
     private lateinit var debtRows: LinearLayout
 
     // History Tab Views
@@ -150,6 +153,9 @@ class MainActivity : AppCompatActivity() {
         userRows = findViewById(R.id.userRows)
         btnAddUser = findViewById(R.id.btnAddUser)
         btnBackToHome = findViewById(R.id.btnBackToHome) // <-- 2. Idinagdag ang findViewById dito
+        tvCloudAccountStatus = findViewById(R.id.tvCloudAccountStatus)
+        btnNavLogin = findViewById(R.id.btnNavLogin)
+        btnNavLogout = findViewById(R.id.btnNavLogout)
         debtRows = findViewById(R.id.debtRows)
 
         // History Tab Elements
@@ -179,6 +185,8 @@ class MainActivity : AppCompatActivity() {
 
         // User Buttons
         btnAddUser.setOnClickListener { showCreateUserDialog() }
+        btnNavLogin.setOnClickListener { showAuthenticationDialog() }
+        btnNavLogout.setOnClickListener { confirmCloudLogout() }
         btnBackToHome.setOnClickListener { switchTab(viewDashboard) } // <-- 3. Idinagdag ang OnClickListener dito
         findViewById<Button>(R.id.btnCreateCloudAccount).setOnClickListener { showAuthenticationDialog() }
         findViewById<Button>(R.id.btnEditCloudEmail).setOnClickListener { showCloudEmailDialog() }
@@ -249,6 +257,7 @@ class MainActivity : AppCompatActivity() {
         }
 		
         setupUserSpinner()
+        updateCloudAccountControls()
         if (syncManager.isSignedIn()) {
             syncManager.sync(activeUser?.id ?: -1) { result ->
                 result.onSuccess {
@@ -305,6 +314,30 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(40, 8, 40, 0)
         }
+
+        private fun updateCloudAccountControls() {
+            val signedIn = syncManager.isSignedIn()
+            tvCloudAccountStatus.text = if (signedIn) {
+                "Signed in as\n${syncManager.signedInEmail ?: "Cloud account"}"
+            } else {
+                "Not signed in\nCloud sync is unavailable"
+            }
+            btnNavLogin.isEnabled = !signedIn
+            btnNavLogout.isEnabled = signedIn
+        }
+
+        private fun confirmCloudLogout() {
+            AlertDialog.Builder(this)
+                .setTitle("Log out of cloud account?")
+                .setMessage("Your local data will remain on this device. Cloud sync will pause until you log in again.")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Log out") { _, _ ->
+                    syncManager.signOut()
+                    updateCloudAccountControls()
+                    Toast.makeText(this, "Logged out of cloud account.", Toast.LENGTH_SHORT).show()
+                }
+                .show()
+        }
         val email = EditText(this).apply {
             hint = "Email"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
@@ -344,6 +377,7 @@ class MainActivity : AppCompatActivity() {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
             result.onSuccess {
                 dialog.dismiss()
+                updateCloudAccountControls()
                 if (!it) {
                     showEmailVerificationDialog(email, password)
                     return@onSuccess
