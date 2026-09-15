@@ -259,13 +259,13 @@ class MainActivity : AppCompatActivity() {
 		
         setupUserSpinner()
         updateCloudAccountControls()
+        // Restore the saved page immediately; cloud sync must not temporarily show Dashboard.
+        showSelectedTab()
         if (syncManager.isSignedIn()) {
             syncManager.sync(activeUser?.id ?: -1) { result ->
                 result.onSuccess {
                     setupUserSpinner()
-                    showSelectedTab()
                 }.onFailure {
-                    showSelectedTab()
                     Toast.makeText(
                         this,
                         "Cloud data could not be loaded: ${it.message}",
@@ -275,7 +275,6 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             showAuthenticationDialog()
-            showSelectedTab()
         }
         if (intent?.action == ACTION_QUICK_ADD_EXPENSE) showExpenseDialog(null)
     }
