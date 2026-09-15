@@ -42,7 +42,8 @@ class SupabaseClient(context: Context) {
     }
 
     fun signOut() {
-        preferences.edit().remove("access_token").remove("user_id").remove("email").apply()
+        preferences.edit().remove("access_token").remove("refresh_token")
+            .remove("user_id").remove("email").apply()
     }
 
     fun updateEmail(email: String) {
@@ -74,6 +75,8 @@ class SupabaseClient(context: Context) {
             throw IOException(json.optString("msg", json.optString("message", "Authentication failed")))
         }
         preferences.edit().putString("access_token", token)
+            .putString("refresh_token", json.optString("refresh_token",
+                preferences.getString("refresh_token", "")))
             .putString("user_id", json.optJSONObject("user")?.optString("id", "") ?: "")
             .putString("email", json.optJSONObject("user")?.optString("email", email) ?: email)
             .apply()
@@ -97,7 +100,7 @@ class SupabaseClient(context: Context) {
         JSONArray(request("GET", "/rest/v1/audit_logs?user_id=eq.$userId&select=*", null, true))
 
     private fun request(method: String, path: String, content: String?, auth: Boolean,
-                        prefer: String? = null): String {
+                        prefer: String? = null, retryOnExpired: Boolean = true): String {
         val builder = Request.Builder().url(URL + path)
             .header("apikey", KEY).header("Accept", "application/json")
         if (auth) builder.header("Authorization", "Bearer " + preferences.getString("access_token", ""))
@@ -106,6 +109,9 @@ class SupabaseClient(context: Context) {
         else builder.method(method, null)
         http.newCall(builder.build()).execute().use { response ->
             val text = response.body()?.string() ?: ""
+            if (response.code() == 401 && auth && retryOnExpired && refreshAccessToken()) {
+                return request(method, path, content, auth, prefer, false)
+            }
             if (!response.isSuccessful) {
                 val message = try {
                     val error = JSONObject(text)
@@ -121,6 +127,31 @@ class SupabaseClient(context: Context) {
                 throw IOException("Supabase request failed (${response.code()}): $message")
             }
             return text
+        }
+    }
+
+    private fun refreshAccessToken(): Boolean {
+        val refreshToken = preferences.getString("refresh_token", null)
+            ?: return false
+        val body = JSONObject().put("refresh_token", refreshToken).toString()
+        val request = Request.Builder()
+            .url(URL + "/auth/v1/token?grant_type=refresh_token")
+            .header("apikey", KEY)
+            .header("Accept", "application/json")
+            .post(RequestBody.create(JSON, body))
+            .build()
+        http.newCall(request).execute().use { response ->
+            val text = response.body()?.string() ?: ""
+            if (!response.isSuccessful) return false
+            val json = JSONObject(text)
+            val token = json.optString("access_token")
+            if (token.isBlank()) return false
+            preferences.edit().putString("access_token", token)
+                .putString("refresh_token", json.optString("refresh_token", refreshToken))
+                .putString("user_id", json.optJSONObject("user")?.optString("id",
+                    preferences.getString("user_id", "")) ?: preferences.getString("user_id", ""))
+                .apply()
+            return true
         }
     }
 }
